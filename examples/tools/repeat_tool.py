@@ -1,6 +1,6 @@
-from base_tool import BaseTool, tool_use
+from tool_use import tool_use
 
-class RepeatTool(BaseTool):
+class RepeatTool:
   @tool_use
   def repeat(self, text: str, times: int) -> str:
     """Repeats a string exactly the specified number of times.

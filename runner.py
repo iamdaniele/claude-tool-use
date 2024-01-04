@@ -1,17 +1,20 @@
-from descriptors import ToolDescriptor, TaskDescriptor
+from descriptors import TaskDescriptor
 from prompts import system_prompt
 from anthropic import Anthropic, AI_PROMPT, HUMAN_PROMPT
 import dotenv
 import json
-from base_tool import BaseTool
-from typing import Any
+from typing import Any, Callable, Union
+from helpers import describe_all_for_claude, describe_for_claude, is_tool_use
 dotenv.load_dotenv()
 
 class Runner:
-  def __init__(self, tools: list[BaseTool], model: str = 'claude-2.1', max_tokens_to_sample: int = 1024):
+  def __init__(self, tools: list[Union[Callable, object]], model: str = 'claude-2.1', max_tokens_to_sample: int = 1024):
     self.tools = {}
     for tool in tools:
-      self.tools.update(tool.describe_all_for_claude())
+      if is_tool_use(tool):
+        self.tools.update(describe_for_claude(tool))
+      else:
+        self.tools.update(describe_all_for_claude(tool))
 
     self.model = model
     self.max_tokens_to_sample = max_tokens_to_sample
