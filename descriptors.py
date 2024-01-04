@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Callable, Union
 from bs4 import BeautifulSoup
+import json
 
 def xml_to_dict(element):
   data = {}
@@ -23,19 +24,23 @@ def xml_to_dict(element):
 
 @dataclass
 class ToolDescriptor:
+  tool_name: str
   description: str
   method: Callable
 
 @dataclass
 class TaskDescriptor:
   tool_name: str
-  arguments: Union[dict, None]
+  parameters: Union[dict, None]
 
   @classmethod
   def from_completion(cls, completion):
     completion = ''.join([line.strip() for line in completion.splitlines()])
-    soup = BeautifulSoup(completion, features='xml')
-    data = xml_to_dict(soup)
+    data = BeautifulSoup(completion, features='xml')
 
-    if 'tool_use' in data and 'invoke' in data['tool_use']:
-      return TaskDescriptor(**data['tool_use']['invoke'])
+    if getattr(data, 'tool_use', None) is None:
+      raise ValueError('No <tool_use></tool_use> tag found')
+    
+    payload = json.loads(data.tool_use.string)
+
+    return TaskDescriptor(**payload['function_calls'][0])

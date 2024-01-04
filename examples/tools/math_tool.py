@@ -1,6 +1,6 @@
-from base_tool import BaseTool, tool_use
+from tool_use import tool_use
 
-class MathTool(BaseTool):
+class MathTool:
   @tool_use
   def add(self, num1: int, num2: int):
     """Adds two numbers.
