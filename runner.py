@@ -1,10 +1,11 @@
-from descriptors import TaskDescriptor
+from descriptors import TaskDescriptor, ToolDescriptor
 from prompts import system_prompt
 from anthropic import Anthropic, AI_PROMPT, HUMAN_PROMPT
 import dotenv
 import json
 from typing import Any, Callable, Union
 from helpers import describe_all_for_claude, describe_for_claude, is_tool_use
+
 dotenv.load_dotenv()
 
 class Runner:
@@ -12,7 +13,9 @@ class Runner:
     self.tools = {}
     for tool in tools:
       if is_tool_use(tool):
-        self.tools.update(describe_for_claude(tool))
+        desc = describe_for_claude(tool)
+        tool_name = desc['tool_name']
+        self.tools[tool_name] = ToolDescriptor(tool_name=tool_name, description=desc, method=tool)
       else:
         self.tools.update(describe_all_for_claude(tool))
 

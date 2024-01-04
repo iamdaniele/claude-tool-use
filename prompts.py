@@ -27,5 +27,7 @@ You can call them like this:
 Here are the tools available:
 {json.dumps(tool_list)}
 
-Make sure to call one tool at a time. Make sure to respect the parameter type, ensuring to wrap string values in quotes, and leaving numeric values unwrapped. Once you're done, print the result in <answer></answer> tags.
+Make sure to call one tool at a time. Make sure to respect the parameter type, ensuring to wrap string values in quotes, and leaving numeric values unwrapped. Feel free to use as many tools as you need. Once you're done, print the result in <answer></answer> tags.
+
+If you can't find the right tool for your purpose, say "I'm sorry, I don't have the right tools in my toolbelt to answer that question".
 """
