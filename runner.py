@@ -2,9 +2,9 @@ from descriptors import ToolDescriptor, TaskDescriptor
 from prompts import system_prompt
 from anthropic import Anthropic, AI_PROMPT, HUMAN_PROMPT
 import dotenv
-from bs4 import BeautifulSoup
-import lxml
+import json
 from base_tool import BaseTool
+from typing import Any
 dotenv.load_dotenv()
 
 class Runner:
@@ -22,8 +22,7 @@ class Runner:
     self.client = Anthropic()
 
   def request(self, prompt: str):
-    descriptions = '\n'.join([self.tools[name].description for name in self.tools])
-    prompt = f"{system_prompt(descriptions)}{HUMAN_PROMPT} {prompt} {AI_PROMPT}"
+    prompt = f"{system_prompt(self.tools.values())}{HUMAN_PROMPT} {prompt} {AI_PROMPT}"
 
     while True:   
       completion = self.client.completions.create(
@@ -47,7 +46,7 @@ class Runner:
           raise Exception(f"Claude attempted to invoke a non-existing tool: '{request.tool_name}'")
         
         # get result and format
-        result = self.tools[request.tool_name].method(**request.arguments)
+        result = self.tools[request.tool_name].method(**request.parameters)
         formatted_result = self._format_result_for_claude(request.tool_name, result)
 
         # feed into the prompt
@@ -58,8 +57,9 @@ class Runner:
         stop_idx = completion.completion.find(self.answer_stop_tag)
         return completion.completion[start_idx:stop_idx].strip()
   
-  def _format_result_for_claude(self, tool_name: str, result: str) -> str:
-    return f"""<tool_results>
-<tool_name>{tool_name}</tool_name>
-<result>{str(result)}</result>
-</tool_results>"""
+  def _format_result_for_claude(self, tool_name: str, result: Any) -> str:
+    json_result = { 'result': {
+      'tool_name': tool_name,
+      'result': result
+    }}
+    return f"""<tool_results>{json.dumps(json_result)}</tool_results>"""

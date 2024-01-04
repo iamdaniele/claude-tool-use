@@ -5,19 +5,24 @@ from functools import wraps
 from descriptors import ToolDescriptor
 
 def prepare_arguments(params: list[DocstringParam]) -> str:
-  return '\n'.join([f"""<name>{params[i].arg_name}</name>
-<description>{params[i].description}</description>""" for i in range(len(params))])
+  out = []
+  for param in params:
+    out.append({
+      'name': param.arg_name,
+      'type': param.type_name,
+      'description': param.description
+    })
+
+  return out
 
 class BaseTool(ABC):
   @final
   def describe_for_claude(self, fn: Callable) -> str:
     parsed = parse(fn.__doc__)
-    return f"""<tool>
-<tool_name>{self.__class__.__name__}.{fn.__name__}</tool_name>
-<arguments>
-{prepare_arguments(parsed.params)}
-</arguments>
-</tool>"""
+    return {
+      'tool_name': f'{self.__class__.__name__}.{fn.__name__}',
+      'arguments': prepare_arguments(parsed.params)
+    }
   
   @final
   def describe_all_for_claude(self) -> dict[ToolDescriptor]:
@@ -27,7 +32,7 @@ class BaseTool(ABC):
       if callable(attr) and getattr(attr, '__tool_use__', None) is not None:
         description = self.describe_for_claude(attr)
         tool_name = f'{self.__class__.__name__}.{attr.__name__}'
-        tools[tool_name] = ToolDescriptor(description=description, method=attr)
+        tools[tool_name] = ToolDescriptor(tool_name=tool_name, description=description, method=attr)
     
     return tools
 
